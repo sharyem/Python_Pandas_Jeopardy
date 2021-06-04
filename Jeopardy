@@ -1,0 +1,54 @@
+import pandas as pd
+pd.set_option('display.max_colwidth', -1)
+
+# import csv
+jeopardy = pd.read_csv('jeopardy.csv')
+
+# rename columns to remove leading space
+jeopardy.columns=["Show Number", "Air Date", "Round", "Category", "Value", "Question", "Answer"]
+# print (jeopardy.head(10))
+
+# changing questions to one case
+jeopardy['Question'] = jeopardy['Question'].str.lower()
+
+#creating df subset to only contain questions that have 'king' or 'england' in them
+king_england = jeopardy[jeopardy['Question'].str.contains(" king | england ")]
+# print (king_england.count())
+
+#standardizing the value and making it into a float rather than string
+king_england['Value'] = king_england['Value'].str.replace('$', '').str.replace(',', '').str.replace('None', '0').astype(float)
+# print(king_england)
+
+#creating a column to check whether the question contains 'king' so I can seperate the 'king' and 'england' questions
+king_england['contains_king'] = king_england['Question'].str.contains("king")
+# print(king_england)
+#creating a df subset based on the column where questions containing 'king' = true 
+only_king = king_england[king_england['contains_king'] == True]
+# print(only_king)
+
+# finding the average value and unique answers for the questions that contain 'king'
+print(only_king.Value.mean())
+print(only_king.Answer.unique())
+
+#creating a df subset that contains the word 'computer'
+contain_computer = jeopardy[jeopardy['Question'].str.contains("computer")]
+#converting the Air Date column to date format
+contain_computer['date']= pd.to_datetime(contain_computer['Air Date'])
+# Extract the year into a new column
+contain_computer['year'] = pd.DatetimeIndex(contain_computer['date']).year
+# Creating a decade column based on the year column using modulo
+contain_computer['decade'] = contain_computer['year'] - (contain_computer['year']%10)
+# print(contain_computer)
+
+# Counting number of questions containing 'computer' by decade
+print(contain_computer.groupby('decade').Question.count())
+
+# Number of unique categories per round
+print(jeopardy.groupby('Round').Category.nunique())
+
+# Creating a df subset with category containing LITERATURE
+literature = jeopardy[jeopardy['Category'].str.contains("LITERATURE")]
+# print(literature)
+
+# Seeing how many LITERATURE categories are in each type of round 
+print(literature.groupby("Round").Category.count())
